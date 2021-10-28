@@ -1,113 +1,73 @@
- https://github.com/valentingarciasanchez/DO400-pipelines-lab.git
+pipeline {
 
- 
+agent any
 
- 
+parameters {
 
- pipeline {
-
- agent any
-
- stages {
-
- stage('Test') {
-
- }
-
- }
+booleanParam(name: "RUN_INTEGRATION_TESTS", defaultValue: true)
 
 }
 
+stages {
 
+stage('Test') {
 
+parallel {
 
+stage('Unit Tests'){
 
-pipeline {
+steps {
 
- agent any
-
- stages {
-
- stage('Test') {
-
- parallel {
-
- }
-
- }
-
- }
+sh './mvnw test -D testGroups=unit'
 
 }
 
+}
 
+stage('Integration Tests'){
 
-pipeline {
+when {
 
- agent any
-
- stages {
-
- stage('Test') {
-
- parallel {
-
- stage('Unit tests') {
-
- steps {
-
- sh './mvnw test -D testGroups=unit'
-
- }
-
- }
-
- }
-
- }
-
- }
+expression { return params.RUN_INTEGRATION_TESTS }
 
 }
 
+steps {
 
+sh './mvnw test -D testGroups=integration'
 
-pipeline {
+}
 
- agent any
+}
 
- parameters {
+}
 
- booleanParam(name: "RUN_INTEGRATION_TESTS", defaultVaaaaaaaaaaaaaaaaaalue: true)
+}
 
- }
+stage('Build') {
 
- stages {
+steps {
 
- stage('Test') {
+script {
 
- parallel {
+try{
 
- stage('Integration tests') {
+sh './mvnw package -D skipTests'
 
- when {
+}catch(ex){
 
- expression { return params.RUN_INTEGRATION_TESTS }
+echo "Error while generating JAR file"
 
- }
+throw ex
 
- steps {
+}
 
- sh './mvnw test -D testGroups=integration'
+}
 
- }
+}
 
- }
+}
 
- }
-
- }
-
- }
+}
 
 }
